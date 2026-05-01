@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/rag_storage/
+eval_history/scores.json
+*.egg-info/
+tests/test_basics.py
+ARCHITECTURE.md
+CLAUDE.md
+.pytest_cache/
+.claude
+frontend/dist/
+frontend/node_modules/
