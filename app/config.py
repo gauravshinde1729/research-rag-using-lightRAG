@@ -3,13 +3,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# API keys are read but not validated at import time so the module can be
+# imported in CI / unit tests without secrets. Code paths that actually call
+# Groq or Cerebras will surface a clear auth error from the OpenAI client.
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise RuntimeError(
-        "GROQ_API_KEY is not set. Copy .env.example to .env and add your "
-        "Groq API key (get one at https://console.groq.com/keys)."
-    )
-
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")

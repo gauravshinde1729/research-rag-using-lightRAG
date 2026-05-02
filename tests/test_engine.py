@@ -13,8 +13,8 @@ load_dotenv(PROJECT_ROOT / ".env")
 # Skip the entire module at collection time if no API key — this prevents
 # `from app.config import ...` (which raises on missing key) from blowing up.
 pytestmark = pytest.mark.skipif(
-    not os.getenv("GROQ_API_KEY"),
-    reason="GROQ_API_KEY not set",
+    not os.getenv("CEREBRAS_API_KEY"),
+    reason="CEREBRAS_API_KEY not set",
 )
 
 
