@@ -1,8 +1,16 @@
+import asyncio
+
 import numpy as np
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, RateLimitError
 from sentence_transformers import SentenceTransformer
 
-from app.config import EMBEDDING_MODEL, GENERATION_MODEL, GROQ_API_KEY, GROQ_BASE_URL
+from app.config import (
+    CEREBRAS_API_KEY,
+    CEREBRAS_BASE_URL,
+    EMBEDDING_MODEL,
+    GENERATION_MODEL,
+    INGESTION_MODEL,
+)
 
 _OPENAI_CHAT_PARAMS = {
     "frequency_penalty",
@@ -24,20 +32,26 @@ _OPENAI_CHAT_PARAMS = {
     "user",
 }
 
+_MAX_RETRIES = 5
+_BACKOFF_SECONDS = (1, 2, 4, 8, 16)
 
-async def groq_llm_complete(
+
+async def cerebras_llm_complete(
     prompt,
     system_prompt=None,
     history_messages=None,
+    model_override=None,
     **kwargs,
 ):
-    """Async LLM completion using Groq's OpenAI-compatible API.
+    """Async LLM completion via Cerebras's OpenAI-compatible API.
 
     LightRAG passes extra kwargs (e.g. ``keyword_extraction``, ``mode``,
-    ``hashing_kv``) that the OpenAI client does not accept. We whitelist only
-    valid chat-completion parameters and drop the rest.
+    ``hashing_kv``) that the OpenAI client rejects — we whitelist only valid
+    chat-completion params. On 429, we retry up to 5 times with exponential
+    backoff (1, 2, 4, 8, 16s).
     """
-    client = AsyncOpenAI(api_key=GROQ_API_KEY, base_url=GROQ_BASE_URL)
+    client = AsyncOpenAI(api_key=CEREBRAS_API_KEY, base_url=CEREBRAS_BASE_URL)
+    model = model_override or GENERATION_MODEL
 
     messages = []
     if system_prompt:
@@ -49,12 +63,44 @@ async def groq_llm_complete(
     safe_kwargs = {k: v for k, v in kwargs.items() if k in _OPENAI_CHAT_PARAMS}
     safe_kwargs.setdefault("max_tokens", 4096)
 
-    response = await client.chat.completions.create(
-        model=GENERATION_MODEL,
-        messages=messages,
-        **safe_kwargs,
+    for attempt in range(_MAX_RETRIES + 1):
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                **safe_kwargs,
+            )
+            return response.choices[0].message.content
+        except RateLimitError:
+            if attempt >= _MAX_RETRIES:
+                raise
+            delay = _BACKOFF_SECONDS[attempt]
+            print(
+                f"Rate limited. Retrying in {delay}s... "
+                f"(attempt {attempt + 1}/{_MAX_RETRIES})"
+            )
+            await asyncio.sleep(delay)
+
+
+async def cerebras_llm_for_ingestion(
+    prompt,
+    system_prompt=None,
+    history_messages=None,
+    model_override=None,
+    **kwargs,
+):
+    """LLM wrapper used during LightRAG ingestion.
+
+    Routes to a smaller/faster Cerebras model since ingestion makes many calls
+    for entity/relationship extraction.
+    """
+    return await cerebras_llm_complete(
+        prompt,
+        system_prompt=system_prompt,
+        history_messages=history_messages,
+        model_override=model_override or INGESTION_MODEL,
+        **kwargs,
     )
-    return response.choices[0].message.content
 
 
 _embed_model = None

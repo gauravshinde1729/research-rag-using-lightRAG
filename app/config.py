@@ -12,8 +12,12 @@ if not GROQ_API_KEY:
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
-GENERATION_MODEL = os.getenv("GENERATION_MODEL", "llama-3.1-70b-versatile")
-EVALUATION_MODEL = os.getenv("EVALUATION_MODEL", "gemma2-9b-it")
+CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
+CEREBRAS_BASE_URL = "https://api.cerebras.ai/v1"
+
+GENERATION_MODEL = os.getenv("GENERATION_MODEL", "llama-3.3-70b")
+INGESTION_MODEL = os.getenv("INGESTION_MODEL", "llama3.1-8b")
+EVALUATION_MODEL = os.getenv("EVALUATION_MODEL", "llama-3.3-70b-versatile")
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "384"))

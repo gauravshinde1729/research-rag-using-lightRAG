@@ -4,11 +4,11 @@ from lightrag import LightRAG, QueryParam
 from lightrag.utils import EmbeddingFunc
 
 from app.config import EMBEDDING_DIM, WORKING_DIR
-from app.rag.models import groq_llm_complete, local_embedding_func
+from app.rag.models import cerebras_llm_for_ingestion, local_embedding_func
 
 
 async def create_rag_engine(working_dir: str | None = None) -> LightRAG:
-    """Build and initialize a LightRAG instance wired to our Groq LLM and
+    """Build and initialize a LightRAG instance wired to our Cerebras LLM and
     local sentence-transformers embedder.
 
     LightRAG requires `initialize_storages()` to be awaited before any query
@@ -19,7 +19,7 @@ async def create_rag_engine(working_dir: str | None = None) -> LightRAG:
 
     rag = LightRAG(
         working_dir=wd,
-        llm_model_func=groq_llm_complete,
+        llm_model_func=cerebras_llm_for_ingestion,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBEDDING_DIM,
             max_token_size=8192,
