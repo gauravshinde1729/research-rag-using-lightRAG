@@ -2,6 +2,10 @@
 
 Ask questions across research PDFs. LightRAG handles retrieval, **Cerebras** generates answers, **Groq** scores them with RAGAS.
 
+
+<img width="1006" height="503" alt="image" src="https://github.com/user-attachments/assets/2beeb390-5b33-469b-bd27-a39dc4a41ef3" />
+
+
 ## Architecture
 
 ```
@@ -78,3 +82,6 @@ Open http://localhost:5173.
 ```powershell
 pytest -v
 ```
+
+
+
